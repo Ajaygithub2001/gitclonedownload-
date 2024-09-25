@@ -60,7 +60,6 @@
                     output.innerHTML = 'This repository is private. You cannot download files without access.';
                     return;
                 }
-
                 // Construct the GitZip URL for the folder
                 const gitZipUrl = `https://api.github.com/repos/${user}/${repo}/contents/${folderPath}`;
 
