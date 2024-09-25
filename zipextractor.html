@@ -49,14 +49,19 @@
     <p>Upload a ZIP file to extract its contents:</p>
     <input type="file" id="fileInput" accept=".zip">
     <button onclick="extractZip()">Extract ZIP</button>
+    <button id="downloadButton" style="display:none;" onclick="downloadAllFiles()">Download All Files</button>
     
     <div id="output"></div>
 
     <script>
+        let extractedFiles = [];
+
         async function extractZip() {
             const fileInput = document.getElementById('fileInput');
             const output = document.getElementById('output');
+            const downloadButton = document.getElementById('downloadButton');
             output.innerHTML = '';  // Clear output
+            extractedFiles = []; // Reset extracted files
 
             if (fileInput.files.length === 0) {
                 output.innerHTML = 'Please upload a ZIP file.';
@@ -87,7 +92,10 @@
                             const fileData = await zipFile.async("blob");  // Get file as blob
                             const url = URL.createObjectURL(fileData); // Create a download URL
 
-                            // Create download link
+                            // Store extracted files with blob URLs for later download
+                            extractedFiles.push({ name: zipFile.name, url });
+
+                            // Create download link (optional display)
                             const link = document.createElement('a');
                             link.href = url;
                             link.download = zipFile.name;
@@ -104,9 +112,20 @@
                 }
 
                 await displayFiles(fileList, output);
+                downloadButton.style.display = 'block'; // Show download button
             } catch (error) {
                 output.innerHTML = `Error extracting ZIP: ${error.message}`;
             }
+        }
+
+        // Function to download all extracted files individually
+        function downloadAllFiles() {
+            extractedFiles.forEach(file => {
+                const link = document.createElement('a');
+                link.href = file.url;
+                link.download = file.name;
+                link.click(); // Trigger download for each file
+            });
         }
     </script>
 </body>
