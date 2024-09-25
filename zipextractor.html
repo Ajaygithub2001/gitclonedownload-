@@ -79,30 +79,29 @@
                 const fileList = Object.values(zipContent.files); 
 
                 // Function to display files and directories
-                function displayFiles(files, parent) {
+                async function displayFiles(files, parent) {
                     const ul = document.createElement('ul');
                     parent.appendChild(ul);
                     
-                    files.forEach(zipFile => {
+                    for (const zipFile of files) {
                         const li = document.createElement('li');
                         li.textContent = zipFile.name;
-                        extractedFiles.push(zipFile); // Store extracted file
+
+                        // Check if it's a directory or file
+                        if (!zipFile.dir) {
+                            const fileData = await zipFile.async("blob");
+                            extractedFiles.push({ name: zipFile.name, blob: fileData }); // Store file blob
+                        }
 
                         if (zipFile.dir) {
                             li.style.fontWeight = 'bold'; // Make directory names bold
                         }
 
                         ul.appendChild(li);
-
-                        // If the file is a directory, call this function recursively
-                        if (zipFile.dir) {
-                            const children = Object.values(zipFile.children || {});
-                            displayFiles(children, li);
-                        }
-                    });
+                    }
                 }
 
-                displayFiles(fileList, output);
+                await displayFiles(fileList, output);
                 downloadButton.style.display = 'block'; // Show download button
             } catch (error) {
                 output.innerHTML = `Error extracting ZIP: ${error.message}`;
@@ -111,12 +110,10 @@
 
         async function downloadAllFiles() {
             const zip = new JSZip();
-            for (const file of extractedFiles) {
-                if (!file.dir) { // Only add files, not directories
-                    const blob = await file.async("blob");
-                    zip.file(file.name, blob);
-                }
-            }
+
+            extractedFiles.forEach(file => {
+                zip.file(file.name, file.blob); // Add the file's blob to the ZIP
+            });
 
             const content = await zip.generateAsync({ type: "blob" });
             const link = document.createElement("a");
