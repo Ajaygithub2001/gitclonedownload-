@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Repository Downloader</h1>
+    <p>Enter the GitHub repository URL (e.g., https://github.com/user/repo):</p>
+    <input type="text" id="repoUrl" placeholder="Repository URL">
+    <button onclick="downloadFiles()">Download as ZIP</button>
+
+    <div id="output"></div>
+
+    <script>
+        async function downloadFiles() {
+            const repoUrl = document.getElementById('repoUrl').value.trim();
+            const output = document.getElementById('output');
+            output.innerHTML = '';  // Clear output
+
+            if (!repoUrl || !repoUrl.startsWith('https://github.com/')) {
+                output.innerHTML = 'Please enter a valid GitHub repository URL.';
+                return;
+            }
+
+            try {
+                // Extract the user and repository name from the URL
+                const urlParts = repoUrl.split('/');
+                const user = urlParts[3];
+                const repo = urlParts[4];
+
+                // Fetch repository details from GitHub API
+                const apiUrl = `https://api.github.com/repos/${user}/${repo}`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Repository not found');
+
+                const repoData = await response.json();
+                const defaultBranch = repoData.default_branch || 'main';
+
+                // Create the URL to download the repository as a ZIP
+                const downloadUrl = `https://github.com/${user}/${repo}/archive/refs/heads/${defaultBranch}.zip`;
+
+                // Create a hidden link element and download the ZIP
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${repo}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                output.innerHTML = `Downloading ${repo}.zip from branch: ${defaultBranch}...`;
+
+            } catch (error) {
+                output.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
