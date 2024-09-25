@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIP File Upload and Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            color: #007bff;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: calc(100% - 22px);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 4px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ZIP File Upload and Extractor</h1>
+    <p>Upload a ZIP file to extract its contents:</p>
+    <input type="file" id="fileInput" accept=".zip">
+    <button onclick="extractZip()">Extract ZIP</button>
+    
+    <div id="output"></div>
+
+    <script>
+        async function extractZip() {
+            const fileInput = document.getElementById('fileInput');
+            const output = document.getElementById('output');
+            output.innerHTML = '';  // Clear output
+
+            if (fileInput.files.length === 0) {
+                output.innerHTML = 'Please upload a ZIP file.';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const jszip = new JSZip();
+
+            try {
+                const zipContent = await jszip.loadAsync(file);
+                output.innerHTML = '<h2>Extracted Files and Directories:</h2>';
+                const fileList = zipContent.file(/.*/); // Get all files in the ZIP
+
+                // Function to display files and directories
+                function displayFiles(files, parent) {
+                    const ul = document.createElement('ul');
+                    parent.appendChild(ul);
+                    
+                    files.forEach(zipFile => {
+                        const li = document.createElement('li');
+                        li.textContent = zipFile.name;
+
+                        if (zipFile.dir) {
+                            li.style.fontWeight = 'bold'; // Make directory names bold
+                        }
+
+                        ul.appendChild(li);
+
+                        // If the file is a directory, call this function recursively
+                        if (zipFile.dir) {
+                            displayFiles(zipFile.children || [], li);
+                        }
+                    });
+                }
+
+                displayFiles(fileList, output);
+            } catch (error) {
+                output.innerHTML = `Error extracting ZIP: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
