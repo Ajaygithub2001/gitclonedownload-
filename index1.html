@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Folder Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Folder Downloader</h1>
+    <p>Enter the GitHub repository URL and folder path (e.g., https://github.com/user/repo and /path/to/folder):</p>
+    <input type="text" id="repoUrl" placeholder="Repository URL">
+    <input type="text" id="folderPath" placeholder="Folder Path">
+    <button onclick="downloadFolder()">Download Folder</button>
+
+    <div id="output"></div>
+
+    <script>
+        async function downloadFolder() {
+            const repoUrl = document.getElementById('repoUrl').value.trim();
+            const folderPath = document.getElementById('folderPath').value.trim();
+            const output = document.getElementById('output');
+            output.innerHTML = '';  // Clear output
+
+            if (!repoUrl || !folderPath) {
+                output.innerHTML = 'Please enter a valid repository URL and folder path.';
+                return;
+            }
+
+            try {
+                // Extract the user and repository name from the URL
+                const urlParts = repoUrl.split('/');
+                const user = urlParts[3];
+                const repo = urlParts[4];
+
+                // Check repository details using GitHub API
+                const repoApiUrl = `https://api.github.com/repos/${user}/${repo}`;
+                const response = await fetch(repoApiUrl);
+
+                if (response.status === 404) {
+                    output.innerHTML = 'Repository not found.';
+                    return;
+                }
+
+                const repoData = await response.json();
+
+                if (repoData.private) {
+                    output.innerHTML = 'This repository is private. You cannot download files without access.';
+                    return;
+                }
+
+                // Construct the GitZip URL for the folder
+                const gitZipUrl = `https://api.github.com/repos/${user}/${repo}/contents/${folderPath}`;
+
+                // Display the link to download the folder
+                output.innerHTML = `
+                    <p>Click the link to download the folder:</p>
+                    <a href="${gitZipUrl}" target="_blank">Download ${folderPath} from ${repo}</a>
+                `;
+            } catch (error) {
+                output.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
