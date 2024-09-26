@@ -92,9 +92,12 @@
                     loading.style.display = 'none';  // Hide loading indicator
                     return;
                 }
-                
+
+                // Check for default branch since not all repositories use "main"
+                const defaultBranch = repoData.default_branch;
+
                 // Construct the ZIP download URL
-                const zipDownloadUrl = `https://github.com/${user}/${repo}/archive/refs/heads/main.zip`;
+                const zipDownloadUrl = `https://github.com/${user}/${repo}/archive/refs/heads/${defaultBranch}.zip`;
 
                 // Display the link to download the ZIP file
                 output.innerHTML = `
